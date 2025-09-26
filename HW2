@@ -1,0 +1,141 @@
+class Stack:
+	def __init__(self) :
+		self.items = []
+
+	def push (self, Key) :
+		self.items.append(Key)
+
+	def pop (self) :
+		try :
+			return self.items.pop()
+		except IndexError :
+			print("Stack is Empty.")
+
+	def top (self) :
+		try :
+			return self.items[-1]
+		except IndexError :
+			print("Stack is Empty.")
+
+	def __len__ (self) :
+		return len(self.items)
+
+	def isEmpty (self) :
+		return self.__len__() == 0
+
+
+
+import re
+
+def get_token_list(expr):
+    if '**' in expr:
+        return ['INVALID_EXPRESSION']
+    try:
+        tokens = re.findall(r'\d+\.\d+|\d+|[+\-*/^()]', expr)
+        return tokens
+    except Exception:
+        return ['INVALID_EXPRESSION']
+
+
+def infix_to_postfix(token_list):
+    if token_list == ['INVALID_EXPRESSION']:
+        return 'INVALID_EXPRESSION'
+
+    opstack = Stack()
+    outstack = []
+
+    priority = {'(': 0, '+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+
+    for token in token_list:
+        if token == '(':
+            opstack.push(token)
+        elif token == ')':
+            while not opstack.isEmpty():
+                x = opstack.pop()
+                if x == '(':
+                    break
+                outstack.append(x)
+            else:
+                return 'INVALID_EXPRESSION'
+        elif token in '+-*/^':
+            while not opstack.isEmpty() and priority[opstack.top()] >= priority[token]:
+                outstack.append(opstack.pop())
+            opstack.push(token)
+        else:
+            try:
+                if '.' in token:
+                    outstack.append(float(token))
+                else:
+                    outstack.append(int(token))
+            except:
+                return 'INVALID_EXPRESSION'
+
+    while not opstack.isEmpty():
+        x = opstack.pop()
+        if x == '(':
+            return 'INVALID_EXPRESSION'
+        outstack.append(x)
+
+    return outstack
+
+
+def compute_postfix(token_list):
+    opstack = Stack()
+    for elem in token_list:
+        if isinstance(elem, str) and elem in '+-*/^':
+            y_val = opstack.pop()
+            x_val = opstack.pop()
+            if x_val is None or y_val is None:
+                return 'INVALID_EXPRESSION'
+            try:
+                x = float(x_val)
+                y = float(y_val)
+            except:
+                return 'INVALID_EXPRESSION'
+
+            try:
+                if elem == '+':
+                    opstack.push(x + y)
+                elif elem == '-':
+                    opstack.push(x - y)
+                elif elem == '*':
+                    opstack.push(x * y)
+                elif elem == '/':
+                    if y == 0:
+                        return 'ZERO_DIVISION_ERROR'
+                    opstack.push(x / y)
+                elif elem == '^':
+                    opstack.push(x ** y)
+            except:
+                return 'INVALID_EXPRESSION'
+
+        elif isinstance(elem, (int, float)):
+            opstack.push(float(elem))
+        else:
+            return 'INVALID_EXPRESSION'
+
+    if len(opstack) != 1:
+        return 'INVALID_EXPRESSION'
+
+    r = opstack.pop()
+    if r is None:
+        return 'INVALID_EXPRESSION'
+    return r
+
+
+
+# 입력받아 계산기 함수들 차례로 호출
+a = input()
+b = get_token_list(a)
+if b == ['INVALID_EXPRESSION']:
+    print('INVALID_EXPRESSION')
+else:
+    c = infix_to_postfix(b)
+    if c == 'INVALID_EXPRESSION':
+        print('INVALID_EXPRESSION')
+    else:
+        d = compute_postfix(c)
+        if isinstance(d, str):
+            print(d)
+        else:
+            print(f"{d:.3f}")
